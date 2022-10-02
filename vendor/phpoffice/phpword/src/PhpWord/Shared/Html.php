@@ -257,16 +257,14 @@ class Html
      * @param \DOMNode $node
      * @param \PhpOffice\PhpWord\Element\AbstractContainer $element
      * @param array &$styles
-     * @return \PhpOffice\PhpWord\Element\TextRun|\PhpOffice\PhpWord\Element\PageBreak
+     * @return \PhpOffice\PhpWord\Element\TextRun
      */
     protected static function parseParagraph($node, $element, &$styles)
     {
         $styles['paragraph'] = self::recursiveParseStylesInHierarchy($node, $styles['paragraph']);
-        if (isset($styles['paragraph']['isPageBreak']) && $styles['paragraph']['isPageBreak']) {
-            return $element->addPageBreak();
-        }
+        $newElement = $element->addTextRun($styles['paragraph']);
 
-        return $element->addTextRun($styles['paragraph']);
+        return $newElement;
     }
 
     /**
@@ -372,11 +370,17 @@ class Html
 
         $newElement = $element->addTable($elementStyles);
 
-        $attributes = $node->attributes;
-        if ($attributes->getNamedItem('border') !== null) {
-            $border = (int) $attributes->getNamedItem('border')->value;
-            $newElement->getStyle()->setBorderSize(Converter::pixelToTwip($border));
-        }
+        // $attributes = $node->attributes;
+        // if ($attributes->getNamedItem('width') !== null) {
+        // $newElement->setWidth($attributes->getNamedItem('width')->value);
+        // }
+
+        // if ($attributes->getNamedItem('height') !== null) {
+        // $newElement->setHeight($attributes->getNamedItem('height')->value);
+        // }
+        // if ($attributes->getNamedItem('width') !== null) {
+        // $newElement=$element->addCell($width=$attributes->getNamedItem('width')->value);
+        // }
 
         return $newElement;
     }
@@ -436,7 +440,7 @@ class Html
      */
     protected static function shouldAddTextRun(\DOMNode $node)
     {
-        $containsBlockElement = self::$xpath->query('.//table|./p|./ul|./ol|./h1|./h2|./h3|./h4|./h5|./h6', $node)->length > 0;
+        $containsBlockElement = self::$xpath->query('.//table|./p|./ul|./ol', $node)->length > 0;
         if ($containsBlockElement) {
             return false;
         }
@@ -765,11 +769,6 @@ class Html
                     // https://developer.mozilla.org/en-US/docs/Web/CSS/vertical-align
                     if (preg_match('#(?:top|bottom|middle|sub|baseline)#i', $cValue, $matches)) {
                         $styles['valign'] = self::mapAlignVertical($matches[0]);
-                    }
-                    break;
-                case 'page-break-after':
-                    if ($cValue == 'always') {
-                        $styles['isPageBreak'] = true;
                     }
                     break;
             }

@@ -171,7 +171,6 @@ class XMLWriter extends \XMLWriter
      * @param mixed $value
      * @return bool
      */
-     #[\ReturnTypeWillChange]
     public function writeAttribute($name, $value)
     {
         if (is_float($value)) {
