@@ -2,6 +2,7 @@
 
 require_once dirname(__DIR__, 4) . '/vendor/autoload.php';
 require_once dirname(__DIR__, 4) . '/inc/Telegram.php';
+require_once dirname(__DIR__, 4) . '/inc/Service.php';
 
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
