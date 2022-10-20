@@ -53,10 +53,12 @@ try {
 
         $split = explode(',', $item);
 
+        $time = Service::formatTime($split[3]);
+
         if (!strpos($item, '"') !== false) {
             $formatted[$split[0]][] = [
                 'task' => $split[2],
-                'time' => $split[3],
+                'time' => $time,
             ];
         }
         else {
@@ -65,6 +67,8 @@ try {
 
             $task = substr($item, $firstMarkPoint + 1, $lastMarkPoint - $firstMarkPoint - 1);
             $time = substr($item, $lastMarkPoint + 2);
+
+            $time = Service::formatTime($time);
 
             $formatted[$split[0]][] = [
                 'task' => $task,
