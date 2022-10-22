@@ -40,10 +40,6 @@ try {
 
     $data = file_get_contents("https://api.telegram.org/file/bot" . TOKEN . "/" . $filePath);
 
-    file_put_contents(dirname(__DIR__, 4) . '/files/' . $fileName, $data);
-
-    $data = file_get_contents(dirname(__DIR__, 4) . '/files/' . $fileName);
-
     $exploded = explode("\n", $data);
 
     unset($exploded[0]);
@@ -85,13 +81,12 @@ try {
 
     $section = $phpWord->addSection();
 
-    $tableStyle = array(
+    $phpWord->addTableStyle('myTable', [
         'borderColor' => '006699',
         'borderSize'  => 6,
         'cellMargin'  => 50
-    );
+    ]);
 
-    $phpWord->addTableStyle('myTable', $tableStyle);
     $table = $section->addTable('myTable');
 
     $tableWidth1 = 3000;
@@ -115,8 +110,15 @@ try {
         $cell3 = $table->addCell($tableWidth3);
 
         foreach ($item as $task) {
-            $cell2->addListItem($task['task'], 0, null, null, ['spaceAfter' => 0]);
-            $cell3->addText($task['time'] . 'ч' /*. '<w:br/>'*/, null, ['spaceAfter' => 0]);
+
+            $taskNameDetail = $task['task'];
+
+            $countOfBreaks = intdiv(strlen($taskNameDetail), 70);
+            $breaks = $countOfBreaks > 0 ? str_repeat('<w:br/>', $countOfBreaks) : '';
+
+            $cell2->addListItem($taskNameDetail, 0, null, null, ['spaceAfter' => 0]);
+
+            $cell3->addText($task['time'] . 'ч' . $breaks, null, ['spaceAfter' => 0]);
             $timeSum += $task['time'];
         }
     }
@@ -129,7 +131,7 @@ try {
     $cell3->addText($timeSum . 'ч');
 
     $objWriter = IOFactory::createWriter($phpWord);
-    $file = dirname(__DIR__, 4) . '/reports/' . "$fileName.docx";
+    $file = dirname(__DIR__, 4) . "/reports/$fileName.docx";
 
     $objWriter->save($file);
 
