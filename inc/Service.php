@@ -22,7 +22,7 @@ class Service
             $minutes = str_replace('0.', '', $minutes);
         }
 
-        return $hours . ($minutes > 0 ? ',' . $minutes : '') . 'ч';
+        return (double)$hours . ($minutes > 0 ? '.' . $minutes : '');
     }
 }
 

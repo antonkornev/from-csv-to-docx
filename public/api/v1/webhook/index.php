@@ -33,12 +33,12 @@ try {
     $fileName = $arData['message']['document']['file_name'];
     $fileId = $arData['message']['document']['file_id'];
 
-    $data = file_get_contents("https://api.telegram.org/bot".TOKEN."/getFile?file_id=" . $fileId);
+    $data = file_get_contents("https://api.telegram.org/bot" . TOKEN . "/getFile?file_id=" . $fileId);
     $data = json_decode($data, true);
 
     $filePath = $data['result']['file_path'];
 
-    $data = file_get_contents("https://api.telegram.org/file/bot".TOKEN."/" . $filePath);
+    $data = file_get_contents("https://api.telegram.org/file/bot" . TOKEN . "/" . $filePath);
 
     file_put_contents(dirname(__DIR__, 4) . '/files/' . $fileName, $data);
 
@@ -106,6 +106,7 @@ try {
     $cell3 = $table->addCell($tableWidth3);
     $cell3->addText('Время');
 
+    $timeSum = 0;
     foreach ($formatted as $taskName => $item) {
         $table->addRow();
         $cell1 = $table->addCell($tableWidth1);
@@ -114,8 +115,9 @@ try {
         $cell3 = $table->addCell($tableWidth3);
 
         foreach ($item as $task) {
-            $cell2->addListItem($task['task']);
-            $cell3->addText($task['time'] . '<w:br/>');
+            $cell2->addListItem($task['task'], 0, null, null, ['spaceAfter' => 0]);
+            $cell3->addText($task['time'] . 'ч' /*. '<w:br/>'*/, null, ['spaceAfter' => 0]);
+            $timeSum += $task['time'];
         }
     }
 
@@ -124,7 +126,7 @@ try {
     $cell2 = $table->addCell($tableWidth2);
     $cell2->addText('Итого');
     $cell3 = $table->addCell($tableWidth3);
-    $cell3->addText('Время');
+    $cell3->addText($timeSum . 'ч');
 
     $objWriter = IOFactory::createWriter($phpWord);
     $file = dirname(__DIR__, 4) . '/reports/' . "$fileName.docx";
@@ -139,4 +141,3 @@ catch (Exception $e) {
         Telegram::sendMessage($userId, $e->getMessage());
     }
 }
-
