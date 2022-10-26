@@ -1,139 +1,41 @@
 <?php
 
-require_once dirname(__DIR__, 4) . '/vendor/autoload.php';
-require_once dirname(__DIR__, 4) . '/inc/Telegram.php';
-require_once dirname(__DIR__, 4) . '/inc/Service.php';
+define("DIR", dirname(__DIR__, 4));
 
-use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\PhpWord;
+require_once DIR . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+require_once DIR . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'WordCreator.php';
+require_once DIR . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'Telegram.php';
+require_once DIR . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'Service.php';
 
 try {
 
     $inputData = file_get_contents('php://input');
     if (empty($inputData)) {
-        exit();
+        throw new Exception('Empty input data');
     }
 
     if (
         substr($inputData,0,1) !== '{'
         && substr($inputData,0,1) !== '['
     ) {
-        exit();
+        throw new Exception('Invalid json');
     }
 
     $arData = json_decode($inputData, true);
     if (json_last_error() != JSON_ERROR_NONE) {
-        exit();
+        throw new Exception('Json decode error: ' . json_last_error());
     }
-
-    file_put_contents('log.txt', json_encode($arData), FILE_APPEND);
 
     $userId = $arData['message']['from']['id'];
 
     $fileName = $arData['message']['document']['file_name'];
     $fileId = $arData['message']['document']['file_id'];
 
-    $data = file_get_contents("https://api.telegram.org/bot" . TOKEN . "/getFile?file_id=" . $fileId);
-    $data = json_decode($data, true);
+    $fileData = Telegram::getFileDataById($fileId);
 
-    $filePath = $data['result']['file_path'];
+    $formatted = Service::formatReportData($fileData);
 
-    $data = file_get_contents("https://api.telegram.org/file/bot" . TOKEN . "/" . $filePath);
-
-    $exploded = explode("\n", $data);
-
-    unset($exploded[0]);
-    unset($exploded[count($exploded)]);
-
-    $formatted = [];
-    foreach ($exploded as $item) {
-
-        $split = explode(',', $item);
-
-        $time = Service::formatTime($split[3]);
-
-        if (!strpos($item, '"') !== false) {
-            $formatted[$split[0]][] = [
-                'task' => $split[2],
-                'time' => $time,
-            ];
-        }
-        else {
-            $firstMarkPoint = strpos($item, '"');
-            $lastMarkPoint = strpos($item, '"', $firstMarkPoint + 1);
-
-            $task = substr($item, $firstMarkPoint + 1, $lastMarkPoint - $firstMarkPoint - 1);
-            $time = substr($item, $lastMarkPoint + 2);
-
-            $time = Service::formatTime($time);
-
-            $formatted[$split[0]][] = [
-                'task' => $task,
-                'time' => $time,
-            ];
-        }
-
-        $firstMarkPoint = strpos($item, ',');
-        $project = substr($item, 0, $firstMarkPoint);
-    }
-
-    $phpWord = new PhpWord();
-
-    $section = $phpWord->addSection();
-
-    $phpWord->addTableStyle('myTable', [
-        'borderColor' => '006699',
-        'borderSize'  => 6,
-        'cellMargin'  => 50
-    ]);
-
-    $table = $section->addTable('myTable');
-
-    $tableWidth1 = 3000;
-    $tableWidth2 = 6000;
-    $tableWidth3 = 1000;
-
-    $table->addRow();
-    $cell1 = $table->addCell($tableWidth1);
-    $cell1->addText('Проект (модуль)');
-    $cell2 = $table->addCell($tableWidth2);
-    $cell2->addText('Выполненные работы по Разработке ОИС');
-    $cell3 = $table->addCell($tableWidth3);
-    $cell3->addText('Время');
-
-    $timeSum = 0;
-    foreach ($formatted as $taskName => $item) {
-        $table->addRow();
-        $cell1 = $table->addCell($tableWidth1);
-        $cell1->addText($taskName);
-        $cell2 = $table->addCell($tableWidth2);
-        $cell3 = $table->addCell($tableWidth3);
-
-        foreach ($item as $task) {
-
-            $taskNameDetail = $task['task'];
-
-            $countOfBreaks = intdiv(strlen($taskNameDetail), 70);
-            $breaks = $countOfBreaks > 0 ? str_repeat('<w:br/>', $countOfBreaks) : '';
-
-            $cell2->addListItem($taskNameDetail, 0, null, null, ['spaceAfter' => 0]);
-
-            $cell3->addText($task['time'] . 'ч' . $breaks, null, ['spaceAfter' => 0]);
-            $timeSum += $task['time'];
-        }
-    }
-
-    $table->addRow();
-    $cell1 = $table->addCell($tableWidth1);
-    $cell2 = $table->addCell($tableWidth2);
-    $cell2->addText('Итого');
-    $cell3 = $table->addCell($tableWidth3);
-    $cell3->addText($timeSum . 'ч');
-
-    $objWriter = IOFactory::createWriter($phpWord);
-    $file = dirname(__DIR__, 4) . "/reports/$fileName.docx";
-
-    $objWriter->save($file);
+    $file = WordCreator::create($formatted, $fileName);
 
     Telegram::sendMessage($userId, 'File created');
     Telegram::sendFile($userId, $file);
