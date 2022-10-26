@@ -37,7 +37,7 @@ class Telegram
             'text' => $message
         ]);
 
-        self::simpleRequest(self::API_DOMAIN . 'bot' . TOKEN . DIRECTORY_SEPARATOR . 'sendMessage' . '?' . $getParams);
+        self::simpleRequest('bot' . TOKEN . DIRECTORY_SEPARATOR . 'sendMessage' . '?' . $getParams);
     }
 
     public static function simpleRequest($url)
