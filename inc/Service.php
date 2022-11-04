@@ -21,6 +21,10 @@ class Service
             $minutes = str_replace('0.', '', $minutes);
         }
 
+        if ($hours == 0 && $minutes == 0) {
+            $minutes = 25;
+        }
+
         return (double)$hours . ($minutes > 0 ? '.' . $minutes : '');
     }
 
