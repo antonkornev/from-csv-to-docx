@@ -5,17 +5,25 @@ use PhpOffice\PhpWord\PhpWord;
 
 class WordCreator
 {
-    const FIRST_COL_WIDTH = 3000;
-    const SECOND_COL_WIDTH = 6000;
-    const THIRD_COL_WIDTH = 1000;
+    private const WIDTH_COL_FIRST = 3000;
+    private const WIDTH_COL_SECOND = 6000;
+    private const WIDTH_COL_THIRD = 1000;
 
-    const FIRST_COL_HEADER = 'Проект (модуль)';
-    const SECOND_COL_HEADER = 'Выполненные работы по Разработке ОИС';
-    const THIRD_COL_HEADER = 'Время';
+    private const HEADER_COL_FIRST = 'Проект (модуль)';
+    private const HEADER_COL_SECOND = 'Выполненные работы по Разработке ОИС';
+    private const HEADER_COL_THIRD = 'Время';
 
-    const REPORTS_DIR = 'reports';
+    private const REPORTS_DIR = 'reports';
 
-    const DOCX_FORMAT = '.docx';
+    private const DOCX_FORMAT = '.docx';
+
+    private const HOURS_SYMBOL = 'ч';
+
+    private const TOTAL_TIME_LABEL = 'Итого';
+
+    private const ZERO_SPACE_AFTER = ['spaceAfter' => 0];
+
+    private const NEW_LINE = '<w:br/>';
 
     public static function create($formattedData, $fileName)
     {
@@ -32,37 +40,37 @@ class WordCreator
         $table = $section->addTable('mainTable');
 
         $table->addRow();
-        $cell1 = $table->addCell(self::FIRST_COL_WIDTH);
-        $cell1->addText(self::FIRST_COL_HEADER);
-        $cell2 = $table->addCell(self::SECOND_COL_WIDTH);
-        $cell2->addText(self::SECOND_COL_HEADER);
-        $cell3 = $table->addCell(self::THIRD_COL_WIDTH);
-        $cell3->addText(self::THIRD_COL_HEADER);
+        $cell1 = $table->addCell(self::WIDTH_COL_FIRST);
+        $cell1->addText(self::HEADER_COL_FIRST);
+        $cell2 = $table->addCell(self::WIDTH_COL_SECOND);
+        $cell2->addText(self::HEADER_COL_SECOND);
+        $cell3 = $table->addCell(self::WIDTH_COL_THIRD);
+        $cell3->addText(self::HEADER_COL_THIRD);
 
         $timeSum = 0;
         foreach ($formattedData as $taskName => $item) {
             $table->addRow();
-            $cell1 = $table->addCell(self::FIRST_COL_WIDTH);
+            $cell1 = $table->addCell(self::WIDTH_COL_FIRST);
             $cell1->addText($taskName);
-            $cell2 = $table->addCell(self::SECOND_COL_WIDTH);
-            $cell3 = $table->addCell(self::THIRD_COL_WIDTH);
+            $cell2 = $table->addCell(self::WIDTH_COL_SECOND);
+            $cell3 = $table->addCell(self::WIDTH_COL_THIRD);
 
             foreach ($item as $task) {
                 $taskNameDetail = $task['task'];
                 $countOfBreaks = intdiv(strlen($taskNameDetail), 70);
-                $breaks = $countOfBreaks > 0 ? str_repeat('<w:br/>', $countOfBreaks) : '';
-                $cell2->addListItem($taskNameDetail, 0, null, null, ['spaceAfter' => 0]);
-                $cell3->addText($task['time'] . 'ч' . $breaks, null, ['spaceAfter' => 0]);
+                $breaks = $countOfBreaks > 0 ? str_repeat(self::NEW_LINE, $countOfBreaks) : '';
+                $cell2->addListItem($taskNameDetail, 0, null, null, self::ZERO_SPACE_AFTER);
+                $cell3->addText($task['time'] . self::HOURS_SYMBOL . $breaks, null, self::ZERO_SPACE_AFTER);
                 $timeSum += $task['time'];
             }
         }
 
         $table->addRow();
-        $table->addCell(self::FIRST_COL_WIDTH);
-        $cell2 = $table->addCell(self::SECOND_COL_WIDTH);
-        $cell2->addText('Итого');
-        $cell3 = $table->addCell(self::THIRD_COL_WIDTH);
-        $cell3->addText($timeSum . 'ч');
+        $table->addCell(self::WIDTH_COL_FIRST);
+        $cell2 = $table->addCell(self::WIDTH_COL_SECOND);
+        $cell2->addText(self::TOTAL_TIME_LABEL);
+        $cell3 = $table->addCell(self::WIDTH_COL_THIRD);
+        $cell3->addText($timeSum . self::HOURS_SYMBOL);
 
         $objWriter = IOFactory::createWriter($phpWord);
         $file = DIR . DIRECTORY_SEPARATOR . self::REPORTS_DIR . DIRECTORY_SEPARATOR . $fileName . self::DOCX_FORMAT;
