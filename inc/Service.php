@@ -40,11 +40,10 @@ class Service
 
             $split = explode(',', $item);
 
-            $time = self::formatTime($split[3]);
-
             $project = $split[0];
 
             if (!strpos($item, '"') !== false) {
+                $time = self::formatTime($split[3]);
                 $formatted[$project][] = [
                     'task' => $split[2],
                     'time' => $time,
