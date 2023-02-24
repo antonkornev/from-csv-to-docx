@@ -67,8 +67,10 @@ class WordCreator
 
         $table->addRow();
         $table->addCell(self::WIDTH_COL_FIRST);
+
         $cell2 = $table->addCell(self::WIDTH_COL_SECOND);
         $cell2->addText(self::TOTAL_TIME_LABEL);
+
         $cell3 = $table->addCell(self::WIDTH_COL_THIRD);
         $cell3->addText($timeSum . self::HOURS_SYMBOL);
 
