@@ -17,15 +17,13 @@ class WordCreator
 
     private const DOCX_FORMAT = '.docx';
 
-    private const HOURS_SYMBOL = 'ч';
-
     private const TOTAL_TIME_LABEL = 'Итого';
 
     private const ZERO_SPACE_AFTER = ['spaceAfter' => 0];
 
     private const NEW_LINE = '<w:br/>';
 
-    public static function create($formattedData, $fileName)
+    public static function create($formattedData, $fileName, $timeSum)
     {
         $phpWord = new PhpWord();
 
@@ -47,7 +45,6 @@ class WordCreator
         $cell3 = $table->addCell(self::WIDTH_COL_THIRD);
         $cell3->addText(self::HEADER_COL_THIRD);
 
-        $timeSum = 0;
         foreach ($formattedData as $taskName => $item) {
             $table->addRow();
             $cell1 = $table->addCell(self::WIDTH_COL_FIRST);
@@ -60,8 +57,7 @@ class WordCreator
                 $countOfBreaks = intdiv(strlen($taskNameDetail), 70);
                 $breaks = $countOfBreaks > 0 ? str_repeat(self::NEW_LINE, $countOfBreaks) : '';
                 $cell2->addListItem($taskNameDetail, 0, null, null, self::ZERO_SPACE_AFTER);
-                $cell3->addText($task['time'] . self::HOURS_SYMBOL . $breaks, null, self::ZERO_SPACE_AFTER);
-                $timeSum += $task['time'];
+                $cell3->addText($task['time'] . $breaks, null, self::ZERO_SPACE_AFTER);
             }
         }
 
@@ -72,7 +68,7 @@ class WordCreator
         $cell2->addText(self::TOTAL_TIME_LABEL);
 
         $cell3 = $table->addCell(self::WIDTH_COL_THIRD);
-        $cell3->addText($timeSum . self::HOURS_SYMBOL);
+        $cell3->addText($timeSum);
 
         $objWriter = IOFactory::createWriter($phpWord);
         $file = DIR . DIRECTORY_SEPARATOR . self::REPORTS_DIR . DIRECTORY_SEPARATOR . $fileName . self::DOCX_FORMAT;

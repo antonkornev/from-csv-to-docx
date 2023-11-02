@@ -2,30 +2,18 @@
 
 class Service
 {
-    public static function formatTime($time): string
+    public static function formatTime($minutes): string
     {
-        $time = substr($time, 0, strripos($time, ':'));
+        $hours = intdiv($minutes, 60);
+        $minutes = $minutes % 60;
 
-        $exploded = explode(':', $time);
-
-        $hours = (int)$exploded[0];
-        $minutes = (int)$exploded[1];
-        $minutes = round($minutes/15) * 15;
-
-        if ($minutes == 60) {
-            $hours++;
-            $minutes = 0;
+        if ($hours > 0 && $minutes > 0) {
+            return $hours . "ч " . $minutes . "м.";
+        } elseif ($hours > 0) {
+            return $hours . "ч.";
+        } else {
+            return $minutes . "м.";
         }
-        else {
-            $minutes = round($minutes / 60, 2);
-            $minutes = str_replace('0.', '', $minutes);
-        }
-
-        if ($hours == 0 && $minutes == 0) {
-            $minutes = 25;
-        }
-
-        return (double)$hours . ($minutes > 0 ? '.' . $minutes : '');
     }
 
     public static function formatReportData($data): array
@@ -33,39 +21,60 @@ class Service
         $exploded = explode("\n", $data);
 
         unset($exploded[0]);
-        unset($exploded[count($exploded)]);
 
         $formatted = [];
+        $totalMinutes = 0;
         foreach ($exploded as $item) {
 
-            $split = explode(',', $item);
+            $split = explode('","', $item);
 
-            $project = $split[0];
-
-            if (!strpos($item, '"') !== false) {
-                $time = self::formatTime($split[3]);
-                $formatted[$project][] = [
-                    'task' => $split[2],
-                    'time' => $time,
-                ];
+            if (empty($split)) {
+                continue;
             }
-            else {
-                $firstMarkPoint = strpos($item, '"');
-                $lastMarkPoint = strpos($item, '"', $firstMarkPoint + 1);
 
-                $task = substr($item, $firstMarkPoint + 1, $lastMarkPoint - $firstMarkPoint - 1);
-                $time = substr($item, $lastMarkPoint + 2);
+            $project = $split[1];
+            $project = str_replace('-', '', $project);
+            $project = preg_replace('/[0-9]+/', '', $project);
 
-                $time = self::formatTime($time);
+            $project = self::getProjectName($project);
 
-                $formatted[$project][] = [
-                    'task' => $task,
-                    'time' => $time,
-                ];
+            if (count($split) == 10) {
+                $minutes = $split[8];
+            } elseif (count($split) == 7) {
+                $minutes = (int) filter_var($split[5], FILTER_SANITIZE_NUMBER_INT);
+            } else {
+                $minutes = $split[7];
             }
+
+            $totalMinutes += (int)$minutes;
+
+            $time = self::formatTime($minutes);
+
+            $task = $split[2] . (!empty($split[6] && strpos($split[6], '0') !== 0) ? (' - ' . $split[6]) : '');
+            $task = str_replace('"', '', $task);
+
+            $formatted[$project][] = [
+                'task' => $task,
+                'time' => $time,
+            ];
         }
 
-        return $formatted;
+        return [
+            'totalTime' => self::formatTime($totalMinutes),
+            'structure' => $formatted
+        ];
+    }
+
+    public static function getProjectName($name) {
+        switch ($name) {
+            case "TCC": return "Tilda CC";
+            case "SRCH": return "Tilda Search";
+            case "DOC": return "Tilda Docs";
+            case "CRM": return "Tilda CRM";
+            case "TILDA": return "Tilda";
+            case "TIME": return "Другое";
+            case "TP": return "Tilda CC Page";
+        }
     }
 }
 

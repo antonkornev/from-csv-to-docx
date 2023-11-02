@@ -35,7 +35,7 @@ try {
 
     $formatted = Service::formatReportData($fileData);
 
-    $file = WordCreator::create($formatted, $fileName);
+    $file = WordCreator::create($formatted['structure'], $fileName, $formatted['totalTime']);
 
     Telegram::sendMessage($userId, 'File created');
     Telegram::sendFile($userId, $file);
