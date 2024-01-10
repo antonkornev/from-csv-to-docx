@@ -32,6 +32,10 @@ class Service
                 continue;
             }
 
+			if (empty($split[1])) {
+				continue;
+			}
+
             $project = $split[1];
             $project = str_replace('-', '', $project);
             $project = preg_replace('/[0-9]+/', '', $project);
@@ -48,15 +52,28 @@ class Service
 
             $totalMinutes += (int)$minutes;
 
-            $time = self::formatTime($minutes);
-
             $task = $split[2] . (!empty($split[6] && strpos($split[6], '0') !== 0) ? (' - ' . $split[6]) : '');
             $task = str_replace('"', '', $task);
 
-            $formatted[$project][] = [
+            $taskHash = md5($task);
+
+            if (!isset($formatted[$project][$taskHash])) {
+                $formatted[$project][$taskHash] = [
+                    'task' => $task,
+                    'time' => 0,
+                ];
+            }
+
+            $formatted[$project][$taskHash] = [
                 'task' => $task,
-                'time' => $time,
+                'time' => $formatted[$project][$taskHash]['time'] + $minutes,
             ];
+        }
+
+        foreach ($formatted as $kt => $tasks) {
+            foreach ($tasks as $kk => $task) {
+                $formatted[$kt][$kk]['time'] = self::formatTime($task['time']);
+            }
         }
 
         return [
@@ -74,6 +91,11 @@ class Service
             case "TILDA": return "Tilda";
             case "TIME": return "Другое";
             case "TP": return "Tilda CC Page";
+            case "ST": return "Tilda Store";
+            case "UT": return "Utilities";
+            default: {
+                die('No project name in \Service::getProjectName: ' . $name);
+            }
         }
     }
 }

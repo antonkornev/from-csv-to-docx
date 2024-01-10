@@ -7,7 +7,7 @@ require_once DIR . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'WordCrea
 require_once DIR . DIRECTORY_SEPARATOR . 'inc' . DIRECTORY_SEPARATOR . 'Service.php';
 
 // edit this for another month
-$filename = '2023_10';
+$filename = '2023_12';
 
 // edit this for another person
 $surname = 'kornev';
@@ -17,3 +17,5 @@ $fileData = file_get_contents(DIR . "/files/$filename.csv");
 $formatted = Service::formatReportData($fileData);
 
 WordCreator::create($formatted['structure'], $resultFilename, $formatted['totalTime']);
+
+echo 'DONE. File saved to reports dir.' . PHP_EOL;
