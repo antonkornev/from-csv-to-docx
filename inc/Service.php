@@ -54,6 +54,7 @@ class Service
 
             $task = $split[2] . (!empty($split[6] && strpos($split[6], '0') !== 0) ? (' - ' . $split[6]) : '');
             $task = str_replace('"', '', $task);
+            $task = str_replace('&', 'and', $task);
 
             $taskHash = md5($task);
 
@@ -93,6 +94,11 @@ class Service
             case "TP": return "Tilda CC Page";
             case "ST": return "Tilda Store";
             case "UT": return "Utilities";
+            case "GPT": return "Tilda AI";
+            case "TSIGN": return "Tilda Sign";
+            case "TFU": return "TFU";
+            case "TPAY": return "Tilda Payments";
+            case "TCCD": return "Tilda Dashboard";
             default: {
                 die('No project name in \Service::getProjectName: ' . $name);
             }
